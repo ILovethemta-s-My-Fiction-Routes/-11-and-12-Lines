@@ -1,0 +1,891 @@
+<html><head><base href="." /><title>11 Line Map</title>
+<style>
+  body {
+    font-family: Verdana, sans-serif; /* Changed from Arial to Verdana */
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    margin: 0;
+    padding: 20px;
+  }
+
+  .subway-map {
+    transform: translateY(20px);
+    opacity: 0;
+    animation: fadeSlideIn 0.8s ease-out forwards;
+    border: 2px solid rgba(242, 110, 29, 0.2);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  @keyframes fadeSlideIn {
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .station-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto;
+    width: 30px;
+    position: relative;
+  }
+
+  .line-11 {
+    width: 20px;
+    height: 100px;
+    background: #F26E1D;
+    position: relative;
+  }
+
+  .line-12 {
+    width: 20px;
+    height: 100px;
+    background: #FFCC00;
+    position: relative;
+  }
+
+  .station {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 4px solid #F26E1D;
+    background: white;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  .station:hover {
+    transform: scale(1.2);
+  }
+
+  .station.express {
+    background: #F26E1D;
+  }
+
+  .station-label {
+    position: absolute;
+    left: 40px;
+    width: 200px;
+    font-size: 14px;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+    padding: 5px 10px;
+  }
+
+  .station:hover .station-label {
+    background: rgba(242, 110, 29, 0.1);
+    transform: translateY(-50%) translateX(5px);
+  }
+
+  .express-label-11 {
+    color: #F26E1D;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+
+  .express-label-12 {
+    color: #FFCC00;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+
+  .legend {
+    margin-top: 20px;
+    padding: 20px;
+    background: linear-gradient(145deg, #ffffff, #fff8f3);
+    border-radius: 5px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(242, 110, 29, 0.2);
+  }
+
+  .legend:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+    transition: transform 0.2s ease;
+    padding: 5px;
+    border-radius: 4px;
+  }
+
+  .legend-item:hover {
+    transform: translateX(5px);
+    background: rgba(242, 110, 29, 0.05);
+  }
+
+  .legend-symbol {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+
+  .legend-symbol.line-11 {
+    border: 2px solid #F26E1D;
+    background: #F26E1D;
+  }
+
+  .legend-symbol.line-12 {
+    border: 2px solid #FFCC00;
+    background: #FFCC00;
+  }
+
+  h1 {
+    color: #F26E1D;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 10px;
+  }
+
+  h1:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #F26E1D, transparent);
+  }
+
+  .station-list, .service-changes, .about-line {
+    margin-top: 40px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(242, 110, 29, 0.2);
+  }
+
+  .station-list:hover, .service-changes:hover, .about-line:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+
+  .station-list h2, .service-changes h2, .about-line h2 {
+    color: #F26E1D;
+    margin-bottom: 15px;
+  }
+
+  .station-list ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .station-list li {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+    border-radius: 4px;
+    margin: 2px 0;
+  }
+
+  .station-list li:hover {
+    background-color: rgba(242, 110, 29, 0.1);
+  }
+
+  .station-list li:last-child {
+    border-bottom: none;
+  }
+
+  .station-type {
+    margin-left: auto;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .stations-container {
+    position: relative;
+    padding-left: 250px;
+    margin: 50px 0;
+  }
+
+  .service-changes {
+    background: linear-gradient(to right, #fff8f3, white);
+    border-left: 4px solid #F26E1D;
+  }
+
+  .service-changes h3 {
+    font-size: 1.2em;
+    margin: 30px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid currentColor;
+  }
+
+  .service-changes .date-range {
+    background: rgba(0,0,0,0.05);
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-top: 20px;
+  }
+
+  .date-range {
+    font-weight: bold;
+    color: #F26E1D;
+    margin-bottom: 10px;
+  }
+
+  .change-details {
+    margin-bottom: 15px;
+    line-height: 1.6;
+  }
+
+  .affected-stations {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    border-left: 3px solid #F26E1D;
+    margin-left: 10px;
+    padding-left: 15px;
+  }
+
+  .about-line {
+    background: linear-gradient(145deg, #ffffff, #fff8f3);
+  }
+
+  .about-line ul li {
+    transition: transform 0.2s ease;
+    padding: 5px;
+    border-radius: 4px;
+  }
+
+  .about-line ul li:hover {
+    transform: translateX(10px);
+    background: rgba(242, 110, 29, 0.05);
+  }
+
+  /* Add smooth scrolling to the whole page */
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+</head>
+<body>
+  <div class="subway-map">
+    <h1>11 Line - Stations Map</h1>
+    
+    <div class="stations-container">
+      <div class="station-line">
+        <div class="station express" data-station="0">
+          <div class="station-label">
+            Coney Island-Stillwell Av
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station" data-station="1">
+          <div class="station-label">
+            Bay 50th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station" data-station="2">
+          <div class="station-label">
+            25th Av
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station express" data-station="3">
+          <div class="station-label">
+            Bay Pkwy
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="4">
+          <div class="station-label">
+            20th Av
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="5">
+          <div class="station-label">
+            18th Av
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="6">
+          <div class="station-label">
+            79th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="7">
+          <div class="station-label">
+            71st St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="8">
+          <div class="station-label">
+            62nd St
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="9">
+          <div class="station-label">
+            55th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="10">
+          <div class="station-label">
+            50th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="11">
+          <div class="station-label">
+            Fort Hamilton Pkwy
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="12">
+          <div class="station-label">
+            9th Av
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="13">
+          <div class="station-label">
+            36th St
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station" data-station="14">
+          <div class="station-label">
+            25th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station" data-station="15">
+          <div class="station-label">
+            Prospect Av
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station" data-station="16">
+          <div class="station-label">
+            4th Av-9th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station" data-station="17">
+          <div class="station-label">
+            Union St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station express" data-station="18">
+          <div class="station-label">
+            Atlantic Av-Barclays Ctr
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station" data-station="19">
+          <div class="station-label">
+            DeKalb Av
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="20">
+          <div class="station-label">
+            Grand St
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="21">
+          <div class="station-label">
+            Broadway-Lafayette St
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="22">
+          <div class="station-label">
+            W 4th St-Wash Sq
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="23">
+          <div class="station-label">
+            14th St/6th Av
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station" data-station="24">
+          <div class="station-label">
+            23rd St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="25">
+          <div class="station-label">
+            34th St-Herald Sq
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station express" data-station="26">
+          <div class="station-label">
+            42nd St-Bryant Pk
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station express" data-station="27">
+          <div class="station-label">
+            47th-50th Sts-Rockefeller Ctr
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+        
+        <div class="station express" data-station="28">
+          <div class="station-label">
+            57th St
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="29">
+          <div class="station-label">
+            Lexington Av-63rd St
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="30">
+          <div class="station-label">
+            72nd St (2nd Av)
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="31">
+          <div class="station-label">
+            86th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="32">
+          <div class="station-label">
+            96th St
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="33">
+          <div class="station-label">
+            106th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="34">
+          <div class="station-label">
+            116th St
+            <div class="express-label express-label-11">Local</div>
+          </div>
+        </div>
+        <div class="line-11"></div>
+
+        <div class="station express" data-station="35">
+          <div class="station-label">
+            Harlem-125th St (Lexington Av)
+            <div class="express-label express-label-11">Local & Express</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-line">
+      <h2>About the Lines</h2>
+      <div style="line-height: 1.6;">
+        <div style="margin: 20px 0;">
+          <h3 style="color: #F26E1D; font-size: 16px;">11 Line (Local Service)</h3>
+          <p>The 11 Line provides local service along the entire route from Coney Island to Harlem-125th St.</p>
+        </div>
+        
+        <div style="margin: 20px 0;">
+          <h3 style="color: #FFCC00; font-size: 16px;">12 Line (Express Service)</h3>
+          <p>The 12 Line provides express service from Coney Island to 57th St, making limited stops at major transfer points.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="service-changes">
+      <h2>Planned Service Changes - January-December 2028</h2>
+      
+      <h3 style="color: #F26E1D; margin-top: 30px;">11 Line (Local) Service Changes</h3>
+      
+      <!-- January-March 2028 -->
+      <div class="date-range">January 1-March 31, 2028 | All Times</div>
+      <div class="change-details">
+        <strong>Station Modernization Project:</strong>
+        <p>Limited service between DeKalb Av and Atlantic Av-Barclays Ctr</p>
+        <p>Trains run every 12 minutes during peak hours</p>
+        <div class="affected-stations">
+          Affected stations: DeKalb Av, Atlantic Av-Barclays Ctr
+        </div>
+      </div>
+
+      <div class="date-range">February 1-29, 2028 | Late Nights</div>
+      <div class="change-details">
+        <strong>Track Maintenance:</strong>
+        <p>No service between Grand St and W 4th St</p>
+        <p>Use alternate subway lines or free shuttle buses</p>
+      </div>
+
+      <!-- April-June 2028 -->
+      <div class="date-range">April 1-June 30, 2028 | Weekends</div>
+      <div class="change-details">
+        <strong>Signal Upgrades:</strong>
+        <p>Trains skip 18th Av and Bay Pkwy</p>
+        <p>Use nearby stations for service</p>
+      </div>
+
+      <div class="date-range">May 15-June 15, 2028 | Rush Hours</div>
+      <div class="change-details">
+        <strong>Station Repairs:</strong>
+        <p>Reduced service between 34th St and 57th St</p>
+        <p>Expect longer wait times and crowded platforms</p>
+      </div>
+
+      <!-- July-September 2028 -->
+      <div class="date-range">July 1-September 30, 2028 | All Times</div>
+      <div class="change-details">
+        <strong>Structural Repairs:</strong>
+        <p>Trains bypass Union St and 4th Av-9th St</p>
+        <p>Free shuttle buses available</p>
+      </div>
+
+      <div class="date-range">August 1-31, 2028 | Weekdays</div>
+      <div class="change-details">
+        <strong>Platform Edge Work:</strong>
+        <p>Limited service between 96th St and 125th St</p>
+        <p>Trains run every 15 minutes</p>
+      </div>
+
+      <!-- October-December 2028 -->
+      <div class="date-range">October 1-December 31, 2028 | All Times</div>
+      <div class="change-details">
+        <strong>Station Enhancement Project:</strong>
+        <p>Reduced service between Bay 50th St and 25th Av</p>
+        <p>Allow extra travel time</p>
+      </div>
+
+      <h3 style="color: #FFCC00; margin-top: 30px;">12 Line (Express) Service Changes</h3>
+      
+      <!-- January-March 2028 -->
+      <div class="date-range">January 1-March 31, 2028 | Weekends</div>
+      <div class="change-details">
+        <strong>Express Track Repairs:</strong>
+        <p>All express trains run local between Coney Island and 62nd St</p>
+        <p>Expect longer travel times</p>
+      </div>
+
+      <!-- April-June 2028 -->
+      <div class="date-range">April 1-June 30, 2028 | All Times</div>
+      <div class="change-details">
+        <strong>Tunnel Maintenance:</strong>
+        <p>Express service operates every 12 minutes</p>
+        <p>Some trains may be rerouted</p>
+      </div>
+
+      <!-- July-September 2028 -->
+      <div class="date-range">July 1-September 30, 2028 | Late Nights</div>
+      <div class="change-details">
+        <strong>Switch Replacement:</strong>
+        <p>Limited express service between Atlantic Av and 34th St</p>
+        <p>Use local service as alternative</p>
+      </div>
+
+      <!-- October-December 2028 -->
+      <div class="date-range">October 1-December 31, 2028 | Rush Hours</div>
+      <div class="change-details">
+        <strong>Signal Modernization:</strong>
+        <p>Express trains run local between 36th St and Atlantic Av</p>
+        <div class="affected-stations">
+          Major delays possible at all express stations
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <h3>Legend</h3>
+      <div class="legend-item">
+        <div class="legend-symbol line-11"></div>
+        11 Line (Local Service)
+      </div>
+      <div class="legend-item">
+        <div class="legend-symbol line-12"></div>
+        12 Line (Express Service to 57th St)
+      </div>
+    </div>
+
+    <div class="station-list">
+      <h2>Station List</h2>
+      <ul>
+        <li>
+          <span>1. Coney Island-Stillwell Av</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>2. Bay 50th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>3. 25th Av</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>4. Bay Pkwy</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>5. 20th Av</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>6. 18th Av</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>7. 79th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>8. 71st St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>9. 62nd St</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>10. 55th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>11. 50th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>12. Fort Hamilton Pkwy</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>13. 9th Av</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>14. 36th St</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>15. 25th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>16. Prospect Av</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>17. 4th Av-9th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>18. Union St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>19. Atlantic Av-Barclays Ctr</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>20. DeKalb Av</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>21. Grand St</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>22. Broadway-Lafayette St</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>23. W 4th St-Wash Sq</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>24. 14th St/6th Av</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>25. 23rd St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>26. 34th St-Herald Sq</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>27. 42nd St-Bryant Pk</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>28. 47th-50th Sts-Rockefeller Ctr</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>29. 57th St</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>30. Lexington Av-63rd St</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>31. 72nd St (2nd Av)</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>32. 86th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>33. 96th St</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+        <li>
+          <span>34. 106th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>35. 116th St</span>
+          <span class="station-type">Local Station</span>
+        </li>
+        <li>
+          <span>36. Harlem-125th St (Lexington Av)</span>
+          <span class="station-type">Local & Express Station</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+  
+  <script>
+  // Add smooth reveal animations for sections as they come into view
+  document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    const sections = document.querySelectorAll('.station-list, .service-changes, .about-line, .legend');
+    sections.forEach(section => {
+      section.style.opacity = '0';
+      section.style.transform = 'translateY(20px)';
+      section.style.transition = 'all 0.8s ease-out';
+      observer.observe(section);
+    });
+
+    // Create parallel lines visualization
+    const stations = document.querySelectorAll('.station');
+    stations.forEach(station => {
+      if(station.classList.contains('express')) {
+        // Add 12 line indicator for express stations
+        const line12Label = document.createElement('div');
+        line12Label.className = 'express-label-12';
+        line12Label.textContent = '12 Express Stop';
+        station.querySelector('.station-label').appendChild(line12Label);
+      }
+    });
+  });
+  </script>
+</body></html>
